@@ -8,7 +8,7 @@ function sum(array) {
 
 }
 
-console.log(sum([30, 30]));
+console.log(sum([30, 30,10,5]));
 
 
 
