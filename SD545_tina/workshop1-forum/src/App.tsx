@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './App.scss';
 import avatar from './images/bozai.png';
 import _ from 'lodash';
@@ -19,50 +19,26 @@ type Comment = {
   ctime: string,
   like: number;
 };
+
+type ItemProps = {
+  rpid: number | string,
+  user: {
+    uid: string,
+    avatar: string,
+    uname: string;
+  },
+  content: string,
+  ctime: string,
+  like: number,
+  onDeleteComment: (rpid: number | string) => void;
+};
+
+
 type tab = {
   type: string,
   text: string;
 };
-// Comment List data
-const defaultList = [
-  {
-    // comment id
-    rpid: 3,
-    // user info
-    user: {
-      uid: '13258165',
-      avatar: '',
-      uname: 'Jay Zhou',
-    },
-    // comment content
-    content: 'Nice, well done',
-    // created datetime
-    ctime: '10-18 08:15',
-    like: 88,
-  },
-  {
-    rpid: 2,
-    user: {
-      uid: '36080105',
-      avatar: '',
-      uname: 'Song Xu',
-    },
-    content: 'I search for you thousands of times, from dawn till dusk.',
-    ctime: '11-13 11:29',
-    like: 88,
-  },
-  {
-    rpid: 1,
-    user: {
-      uid: '30009257',
-      avatar,
-      uname: 'John',
-    },
-    content: 'I told my computer I needed a break... now it will not stop sending me vacation ads.',
-    ctime: '10-19 09:00',
-    like: 66,
-  },
-];
+
 // current logged in user info
 const user = {
   // userid
@@ -81,19 +57,30 @@ const tabs = [
   { type: 'newest', text: 'Newest' },
 ];
 
+function useGetList() {
+  const [commentList, setCommentList] = useState<Comment[]>([]);
+  useEffect(() => {
+    async function getDefaultList() {
+      const response = await fetch('http://localhost:3004/list');
+      const data = await response.json();
+      setCommentList(_.orderBy(data, 'like', 'desc'));
+    }
+    getDefaultList();
+  }, []);
 
-type ItemProps = {
-  item: Comment,
-  onDeleteComment: (rpid: number | string) => void;
-};
+  return {
+    commentList,
+    setCommentList
+  };
+}
 
 
 function Item(props: ItemProps) {
 
-  const { item, onDeleteComment } = props;
+  const { rpid, user: myuser, content, ctime, like, onDeleteComment } = props;
 
   return (
-    <div className="reply-item" key={item.rpid}>
+    <div className="reply-item" key={rpid}>
       {/* profile */}
       <div className="root-reply-avatar">
         <div className="bili-avatar">
@@ -107,20 +94,20 @@ function Item(props: ItemProps) {
       <div className="content-wrap">
         {/* username */}
         <div className="user-info">
-          <div className="user-name">{item.user.uname}</div>
+          <div className="user-name">{user.uname}</div>
         </div>
         {/* comment content */}
         <div className="root-reply">
-          <span className="reply-content">{item.content}</span>
+          <span className="reply-content">{content}</span>
           <div className="reply-info">
             {/* comment created time */}
-            <span className="reply-time">{item.ctime}</span>
+            <span className="reply-time">{ctime}</span>
             {/* total likes */}
-            <span className="reply-time">Like:{item.like}</span>
+            <span className="reply-time">Like:{like}</span>
 
             {
-              item.user.uid === user.uid && (
-                <span className="delete-btn" onClick={() => onDeleteComment(item.rpid)}>
+              myuser.uid === user.uid && (
+                <span className="delete-btn" onClick={() => onDeleteComment(rpid)}>
                   Delete
                 </span>
               )
@@ -135,7 +122,7 @@ function Item(props: ItemProps) {
 
 const App = () => {
 
-  const [commentList, setCommentList] = useState<Comment[]>(_.orderBy(defaultList, "like", "desc"));
+  const { commentList, setCommentList } = useGetList();
   const [activeType, setActiveType] = useState("hot");
   const [comment, setComment] = useState<string>('');
 
@@ -155,15 +142,14 @@ const App = () => {
   };
 
   const handleDeleteComment = (rpid: string | number) => {
-    setCommentList(commentList.filter(item => item.rpid !== rpid));
+    setCommentList(commentList.filter((item: { rpid: string | number; }) => item.rpid !== rpid));
   };
   const makePost = () => {
-    // console.log(textareaRef.current?.value);
-    // do another version: controlled component
+
     const newComment = {
       rpid: uuidv4(),
       user,
-      content: "my comment", // controlled component
+      content: "my comment",
       ctime: dayjs(Date.now()).format('MM-DD HH:mm'),
       like: 0
     };
@@ -217,7 +203,7 @@ const App = () => {
         {/* comment list */}
         <div className="reply-list">
           {/* comment item */}
-          {commentList.map(item => <Item item={item} onDeleteComment={handleDeleteComment} />)}
+          {commentList.map((item: Comment) => <Item {...item} onDeleteComment={handleDeleteComment} />)}
 
 
         </div>
