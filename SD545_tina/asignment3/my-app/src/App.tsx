@@ -1,14 +1,23 @@
+import React from 'react';
 import React, { useState } from 'react';
-/*
-Q3. Build a component that generates a random number between 1 and 100 when a
- button is clicked. Display the generated number using useState.
-*/
+import App0 from './App-counter';
+import App1 from './App-random';
+import TemperatureConverter from './app-celcius';
+
 
 function App() {
     return (
-        <div className="App">
 
-        </div>
+
+        <>
+
+            <App0></App0>
+            <App1></App1>
+            <TemperatureConverter />
+
+        </>
+
+
     );
 }
 

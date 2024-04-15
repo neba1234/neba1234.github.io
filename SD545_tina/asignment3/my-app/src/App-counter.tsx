@@ -9,7 +9,7 @@ value initialized to 0.Include two buttons: one for incrementing the counter and
 
 
 
-function App() {
+function App0() {
 
   const [count, setCount] = useState(0);
 
